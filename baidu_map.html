@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <style type="text/css">  
+        html{height:100%}    
+        body{height:100%;margin:0px;padding:0px}    
+        #container{height:300px;width: 30%;}    
+    </style> 
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=qtpkq6v0V1mY67CpYDrxyqyq3wivCp6F"></script>
+</head>
+<body>
+    <div id="container"></div>
+    <input type="text" id="text1"/>
+    <button id="btn1">搜索</button>
+    <script>
+        // 创建百度地图实例
+        var map = new BMap.Map("container");
+
+        // 设置某个点的坐标
+        var point = new BMap.Point(113.30764968,23.12004910);
+
+        // 设置地图起始的中心点
+        map.centerAndZoom(point, 15); 
+        map.enableScrollWheelZoom(true); 
+        
+        // 获取当前地点坐标操作
+        // var geolocation = new BMap.Geolocation();
+        // geolocation.getCurrentPosition((res) => {
+        //     console.log(res);
+        // });
+
+        // 求两点之间的距离
+        // var point1 = new BMap.Point(parseInt(116.404),parseInt(39.915));
+        // var point2 = new BMap.Point(parseInt(113.30764968),parseInt(23.12004910));
+        // function getDistance(point1,point2){
+        //     var map = new BMap.Map();
+        //     var distance = map.getDistance(point1,point2);
+        //     console.log(distance);
+        // };
+        // getDistance(point1,point2);
+
+        // 设置标注图标
+        // var marker = new BMap.Marker(point2);
+        // map.addOverlay(marker);
+
+        // 设置图标文字标注框
+        // var opts = {
+        //     width : 100,     // 信息窗口宽度
+        //     height: 50,     // 信息窗口高度
+        //     title : "分店信息" , // 信息窗口标题
+        //     }
+        // var infoWindow = new BMap.InfoWindow("第一分店", opts);  // 创建信息窗口对象 
+        // marker.addEventListener("click", function(){          
+        //     map.openInfoWindow(infoWindow,point2); //开启信息窗口
+        // });
+
+        // 为地图添加交互控件
+        //  map.addControl(new BMap.NavigationControl());//addControl()向地图添加控件 平移和缩放控件 PC端默认左上角 移动端默认右下角且只有缩放功能
+        //  map.addControl(new BMap.ScaleControl());//比例尺控件 默认左下角
+        //  map.addControl(new BMap.OverviewMapControl());//缩略图控件 默认右下角且呈可折叠状态（点击隐藏和显示）
+        //  map.addControl(new BMap.MapTypeControl());//地图类型控件 默认右上角可切换地图/卫星/三维三种状态
+        //  map.addControl(new BMap.GeolocationControl());//定位控件 默认左下角
+
+        // 在地图上画一个圆圈
+        var circlePoint = new BMap.Point(113.307649,23.12004910);
+        var circle = new BMap.Circle(circlePoint,1000,{fillColor:"red",strokeWidth:1,fillOpacity:0.0001,strokeOpacity:0.5});
+        circle.addEventListener('click',() => {
+            console.log("you are in the circle");
+        });
+        map.addOverlay(circle);
+
+        // 获取圆圈里面的目标点
+        var point1 = new BMap.Point(113.30764967,23.12004911);
+        var point2 = new BMap.Point(113.30764967,23.13);
+        var points = [];
+        let markers = [];
+        points.push(point1,point2);
+        for(let x = 0;x<points.length;x++)
+        {
+            let marker = new BMap.Marker(points[x]);
+            markers.push(marker);
+        }
+        for(let i = 0;i<markers.length;i++)
+        {
+            map.addOverlay(markers[i]);
+            markers[i].addEventListener("click",function(){
+                if(parseInt(map.getDistance(points[i],circlePoint)) > 1000)
+                {
+                    console.log("当前点在圆圈外");
+                }
+                else
+                {
+                    console.log("当前点在圆圈内");
+                }
+                // 笨方法
+                // let distance = Math.sqrt(Math.pow(markers[i].LA.lat - circlePoint.lat,2) + Math.pow(markers[i].LA.lng - circlePoint.lng,2));
+                // console.log(distance.toFixed(8));
+            });
+        }
+
+        // 在地图上搜索地址
+        function searching(){
+            var locale = document.getElementById("text1").value;
+            var realLocale = new BMap.LocalSearch(map,{onSearchComplete: fn});
+            realLocale.search(locale);
+            // 成功返回搜索结果的回调函数
+            function fn(){
+                var result = realLocale.getResults();
+                if(result.Ar.length)
+                {
+                    if(map.getDistance(result.Ar[0].point,circlePoint) > 3000)
+                    {
+                        console.log("你的地址在配送范围以外");
+                        var targetMarker = new BMap.Marker(result.Ar[0].point);
+                        map.addOverlay(targetMarker);
+                        map.setCenter(result.Ar[0].point);
+                    }
+                    else
+                    {
+                        console.log("地址在配送范围以内");
+                    }
+                }
+            }
+        };
+        document.getElementById("btn1").addEventListener('click',() => {
+            searching();
+        });
+    </script>
+
+
+</body>
